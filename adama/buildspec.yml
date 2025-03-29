@@ -9,12 +9,8 @@ env:
     ECR_REPOSITORY: "adama_internal"
     TASK_DEF_NAME: "Adama-BG"
     S3_BUCKET_NAME: "adama-ecs-bg"
-    CODEDEPLOY_APPLICATION_NAME: "Leo1_Frontend_BG_App"
-    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "Leo1_Frontend_BG_DG"
-    
-
-  secrets-manager:
-    GITHUB_TOKEN: "github-token-id"  # AWS Secrets Manager for GitHub Token
+    CODEDEPLOY_APPLICATION_NAME: "AppECS-Test-UAT-Adama-BG"
+    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "DgpECS-Test-UAT-Adama-BG"
 
 phases:
   install:
@@ -29,7 +25,7 @@ phases:
     commands:
       - echo "Checking project directory..."
       - pwd
-      - ls -l  # Debugging: List files to verify docker-compose.yml is present
+      - ls -l
       - echo "Logging in to Amazon ECR..."
       - aws ecr get-login-password --region "$AWS_REGION" | docker login --username AWS --password-stdin "$ECR_REGISTRY"
       - export IMAGE_TAG=$CODEBUILD_BUILD_NUMBER
@@ -37,10 +33,33 @@ phases:
   build:
     commands:
       - echo "Building Docker images using Docker..."
-      - docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:$IMAGE_TAG -f login-app/Dockerfile .
+      - docker build -t --no-cache $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG -f login-app/Dockerfile .
       - echo "Listing built images..."
-      - docker images  # Debugging step to check built image names
+      - docker images
       - echo "Tagging images..."
-      - docker tag adama_internal:latest "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
+      - docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
       - echo "Pushing Docker images to ECR..."
-      - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+      - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
+
+  post_build:
+    commands:
+      - echo "Setting environment variables..."
+      - export ECR_REPOSITORY="adama_internal"
+      - export ECR_REGISTRY="600941914653.dkr.ecr.ap-south-1.amazonaws.com"
+      - aws ecr describe-images --repository-name "$ECR_REPOSITORY" --region "$AWS_REGION" --query 'sort_by(imageDetails, &imagePushedAt)[-1:].imageTags' --output json
+
+      - echo "Updating task definition JSON with new image URLs..."
+      - jq --arg appImage "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG" '.containerDefinitions[0].image=$appImage' task-def.json > new-task-def.json
+
+      - cat new-task-def.json
+      - echo "Registering new ECS task definition..."
+      - aws ecs register-task-definition --cli-input-json file://new-task-def.json
+
+      - aws s3 cp s3://$S3_BUCKET_NAME/appspec.yaml appspec.yaml
+      - export LATEST_TASK_DEF_ARN=$(aws ecs list-task-definitions --family-prefix "Adama-BG" --region "$AWS_REGION" --sort DESC | jq -r '.taskDefinitionArns[0]')
+      - yq eval ".Resources[0].TargetService.Properties.TaskDefinition = \"$LATEST_TASK_DEF_ARN\"" -i appspec.yaml
+      - cat appspec.yaml
+      - aws s3 cp appspec.yaml s3://$S3_BUCKET_NAME/appspec.yaml 
+
+      - echo "Initiating CodeDeploy deployment..."
+      - aws deploy create-deployment --application-name $CODEDEPLOY_APPLICATION_NAME --deployment-group-name $CODEDEPLOY_DEPLOYMENT_GROUP_NAME --revision '{"revisionType":"S3","s3Location":{"bucket":"'$S3_BUCKET_NAME'","key":"appspec.yaml","bundleType":"YAML"}}' --region $AWS_REGION
