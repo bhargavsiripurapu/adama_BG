@@ -33,13 +33,14 @@ phases:
   build:
     commands:
       - echo "Building Docker images using Docker..."
-      - docker build -t --no-cache $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG -f adama/login-app/Dockerfile adama/login-app
+      - docker build --no-cache -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG -f adama/login-app/Dockerfile adama/login-app
       - echo "Listing built images..."
       - docker images
       - echo "Tagging images..."
       - docker tag $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
       - echo "Pushing Docker images to ECR..."
       - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG"
+
 
   post_build:
     commands:
