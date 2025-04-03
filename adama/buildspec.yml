@@ -52,7 +52,7 @@ phases:
       - jq --arg appImage "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG" '.containerDefinitions[0].image=$appImage' adama/task-def.json > new-task-def.json
       - cat new-task-def.json
       - echo "Registering new ECS task definition..."
-      - aws ecs register-task-definition --cli-input-json file://adama/new-task-def.json
+      - aws ecs register-task-definition --cli-input-json file://new-task-def.json
 
       - aws s3 cp s3://$S3_BUCKET_NAME/appspec.yaml appspec.yaml
       - export LATEST_TASK_DEF_ARN=$(aws ecs list-task-definitions --family-prefix "Adama-BG" --region "$AWS_REGION" --sort DESC | jq -r '.taskDefinitionArns[0]')
