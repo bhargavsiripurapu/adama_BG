@@ -9,9 +9,8 @@ env:
     ECR_REPOSITORY: "adama_internal"
     TASK_DEF_NAME: "Adama-BG"
     S3_BUCKET_NAME: "adama-ecs-bg"
-    CODEDEPLOY_APPLICATION_NAME: "AppECS-Test-UAT-Adama-BG"
-    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "DgpECS-Test-UAT-Adama-BG"
-
+    CODEDEPLOY_APPLICATION_NAME: "Adama-Bg"
+    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "Adama_BG"
 phases:
   install:
     commands:
@@ -33,7 +32,7 @@ phases:
   build:
     commands:
       - echo "Building Docker images using Docker..."
-      - docker build --no-cache -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG -f adama/login-app/Dockerfile adama/login-app
+      - docker build --no-cache -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG -f adama/login-app/Dockerfile .
       - echo "Listing built images..."
       - docker images
       - echo "Tagging images..."
