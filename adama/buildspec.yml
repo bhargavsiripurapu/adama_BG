@@ -49,7 +49,10 @@ phases:
       - aws ecr describe-images --repository-name "$ECR_REPOSITORY" --region "$AWS_REGION" --query 'sort_by(imageDetails, &imagePushedAt)[-1:].imageTags' --output json
 
       - echo "Updating task definition JSON with new image URLs..."
-      - jq --arg appImage "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG" '.containerDefinitions[0].image=$appImage' adama/task-def.json > new-task-def.json
+      - jq 'del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' adama/task-def.json | \
+      - jq --arg appImage "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG" '.containerDefinitions[0].image=$appImage' > new-task-def.json
+
+      # jq --arg appImage "$ECR_REGISTRY/$ECR_REPOSITORY:app-$IMAGE_TAG" '.containerDefinitions[0].image=$appImage' adama/task-def.json > new-task-def.json
       - cat new-task-def.json
       - echo "Registering new ECS task definition..."
       - aws ecs register-task-definition --cli-input-json file://new-task-def.json
