@@ -10,7 +10,7 @@ env:
     TASK_DEF_NAME: "Adama-BG"
     S3_BUCKET_NAME: "adama-ecs-bg"
     CODEDEPLOY_APPLICATION_NAME: "Adama-Bg"
-    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "Adama_BG"
+    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "Adama_Prod_BG"
 phases:
   install:
     commands:
