@@ -62,3 +62,6 @@ phases:
 
       - echo "Initiating CodeDeploy deployment..."
       - aws deploy create-deployment --application-name $CODEDEPLOY_APPLICATION_NAME --deployment-group-name $CODEDEPLOY_DEPLOYMENT_GROUP_NAME --revision '{"revisionType":"S3","s3Location":{"bucket":"'$S3_BUCKET_NAME'","key":"appspec.yaml","bundleType":"YAML"}}' --region $AWS_REGION
+
+
+      
