@@ -7,10 +7,10 @@ env:
     AWS_ACCOUNT_ID: "600941914653"
     ECR_REGISTRY: "600941914653.dkr.ecr.ap-south-1.amazonaws.com"
     ECR_REPOSITORY: "adama_internal"
-    TASK_DEF_NAME: "Adama-BG"
+    TASK_DEF_NAME: "adama-internal-prod-task"
     S3_BUCKET_NAME: "adama-ecs-bg"
-    CODEDEPLOY_APPLICATION_NAME: "Adama-Bg"
-    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "Adama_Prod_BG"
+    CODEDEPLOY_APPLICATION_NAME: "AppECS-adama-internal-prod-cluster-adama-internal-prod-BG"
+    CODEDEPLOY_DEPLOYMENT_GROUP_NAME: "DgpECS-adama-internal-prod-cluster-adama-internal-prod-BG"
 phases:
   install:
     commands:
@@ -55,7 +55,7 @@ phases:
       - aws ecs register-task-definition --cli-input-json file://new-task-def.json
 
       - aws s3 cp s3://$S3_BUCKET_NAME/appspec.yaml appspec.yaml
-      - export LATEST_TASK_DEF_ARN=$(aws ecs list-task-definitions --family-prefix "Adama-BG" --region "$AWS_REGION" --sort DESC | jq -r '.taskDefinitionArns[0]')
+      - export LATEST_TASK_DEF_ARN=$(aws ecs list-task-definitions --family-prefix "adama-internal-prod-task" --region "$AWS_REGION" --sort DESC | jq -r '.taskDefinitionArns[0]')
       - yq eval ".Resources[0].TargetService.Properties.TaskDefinition = \"$LATEST_TASK_DEF_ARN\"" -i appspec.yaml
       - cat appspec.yaml
       - aws s3 cp appspec.yaml s3://$S3_BUCKET_NAME/appspec.yaml 
