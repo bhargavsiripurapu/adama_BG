@@ -1,44 +1,47 @@
 {
-    "family": "Adama-BG",
+    "family": "adama-internal-prod-task",
     "containerDefinitions": [
         {
-            "name": "adama-web",
-            "image": "600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal:latest",
-            "cpu": 1024,
-            "memory": 2048,
-            "memoryReservation": 2048,
+            "name": "adama-internal-prod-container",
+            "image": "600941914653.dkr.ecr.ap-south-1.amazonaws.com/adama_internal:app-30",
+            "cpu": 0,
             "portMappings": [
                 {
-                    "name": "80",
                     "containerPort": 80,
                     "hostPort": 80,
-                    "protocol": "tcp",
-                    "appProtocol": "http"
+                    "protocol": "tcp"
                 }
             ],
             "essential": true,
-            "environment": [],
-            "environmentFiles": [],
+            "environment": [
+                {
+                    "name": "ENV",
+                    "value": "production"
+                },
+                {
+                    "name": "PORT",
+                    "value": "80"
+                },
+                {
+                    "name": "LOG_LEVEL",
+                    "value": "info"
+                }
+            ],
             "mountPoints": [],
             "volumesFrom": [],
-            "ulimits": [],
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/Adama-BG",
-                    "mode": "non-blocking",
-                    "awslogs-create-group": "true",
-                    "max-buffer-size": "25m",
+                    "awslogs-group": "/ecs/adama-internal-prod",
                     "awslogs-region": "ap-south-1",
                     "awslogs-stream-prefix": "ecs"
-                },
-                "secretOptions": []
+                }
             },
             "systemControls": []
         }
     ],
-    "taskRoleArn": "arn:aws:iam::600941914653:role/ecsTaskExecutionRole",
-    "executionRoleArn": "arn:aws:iam::600941914653:role/ecsTaskExecutionRole",
+    "taskRoleArn": "arn:aws:iam::600941914653:role/adama-internal-prod-ecsTaskRole",
+    "executionRoleArn": "arn:aws:iam::600941914653:role/adama-internal-prod-ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "volumes": [],
     "placementConstraints": [],
@@ -46,7 +49,7 @@
         "FARGATE"
     ],
     "cpu": "1024",
-    "memory": "4096",
+    "memory": "2048",
     "runtimePlatform": {
         "cpuArchitecture": "X86_64",
         "operatingSystemFamily": "LINUX"
